@@ -1,0 +1,6 @@
+{
+  "name": "OSIS SMKN 1 BANDAR",
+  "description": "Aplikasi portal manajemen kegiatan, keuangan, absensi, voting, dan aspirasi OSIS SMKN 1 Bandar dengan dashboard multi-role.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
