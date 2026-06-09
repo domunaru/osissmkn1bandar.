@@ -1,0 +1,62 @@
+# Workflow untuk Mendeploy React Vite App ke GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Jalankan workflow setiap kali push ke branch "main"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Detect, Install, and Build Project
+        run: |
+          # 1. Cari folder yang berisi package.json secara dinamis
+          TARGET_DIR=$(find . -name "package.json" -not -path "*/node_modules/*" | head -n 1 | xargs dirname)
+          echo "Menemukan file konfigurasi di folder: $TARGET_DIR"
+          
+          # 2. Pindah ke folder tersebut dan jalankan instalasi + build
+          cd "$TARGET_DIR"
+          npm install
+          npm run build
+          
+          # 3. Temukan folder hasil build (dist) secara dinamis
+          DIST_PATH=$(find . -name "dist" -type d -not -path "*/node_modules/*" | head -n 1)
+          echo "Menemukan folder hasil build di: $DIST_PATH"
+          
+          # 4. Salin hasil build ke folder terpusat di root untuk di-upload
+          mkdir -p "$GITHUB_WORKSPACE/deploy-dist"
+          cp -r "$DIST_PATH"/* "$GITHUB_WORKSPACE/deploy-dist/"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './deploy-dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
